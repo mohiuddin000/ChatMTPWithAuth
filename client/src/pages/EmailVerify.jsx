@@ -82,21 +82,28 @@ const EmailVerify = () => {
     }, [isLoggedin, userData]);
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-200 to-purple-400">
+        <div className="flex items-center justify-center min-h-screen bg-[#0d1117] bg-gradient-to-br from-[#0d1117] via-[#0a0f1f] to-[#000000] relative px-4">
+            {/* Logo with neon glow */}
             <img
                 onClick={() => navigate("/")}
-                src={assets.logo}
+                src={assets.chatMTP_logo}
                 alt=""
-                className="absolute left-5 sm:left-20 top-5 w-28 sm:w-32 cursor-pointer"
+                className="absolute left-5 sm:left-20 top-5 w-10 sm:w-20 cursor-pointer
+                           drop-shadow-[0_0_18px_rgba(0,194,255,0.35)]"
             />
+
             <form
                 onSubmit={onSubmitHandler}
-                className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+                className="relative w-full max-w-md p-8 sm:p-10 rounded-2xl
+                           bg-[#0d1117] bg-gradient-to-br from-[#0d1117] via-[#0a0f1f] to-[#000000]
+                           border border-[#00C2FF]/8
+                           shadow-[0_20px_40px_rgba(2,6,23,0.75)]
+                           text-sm"
             >
-                <h1 className="text-white text-2xl font-semibold text-center mb-4">
+                <h1 className="text-white text-2xl font-semibold text-center mb-2">
                     Verify OTP
                 </h1>
-                <p className="text-center mb-6 text-indigo-300">
+                <p className="text-center mb-6 text-gray-400">
                     Enter the 6-digit code sent to your Email ID
                 </p>
 
@@ -112,17 +119,48 @@ const EmailVerify = () => {
                                 maxLength="1"
                                 required
                                 key={index}
-                                className="w-12 h-12 bg-[#333A5C] text-white text-center text-xl rounded-md"
                                 ref={(e) => (inputRefs.current[index] = e)}
                                 onInput={(e) => handleInput(e, index)}
                                 onKeyDown={(e) => handleKeyDown(e, index)}
+                                className="
+                                    w-12 h-12 text-white text-center text-xl rounded-md
+                                    bg-[rgba(255,255,255,0.02)] border border-[#00C2FF]/12
+                                    focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30
+                                    placeholder-gray-400
+                                "
                             />
                         ))}
                 </div>
-                <button className="w-full py-3 bg-gradient-to-r from-indigo-500 to-indigo-900 text-white rounded-full">
+
+                <button
+                    className="w-full py-3 rounded-full
+                               bg-gradient-to-r from-[#00C2FF] to-[#6C63FF]
+                               text-black font-semibold
+                               hover:brightness-105 transition-all duration-200
+                               shadow-[0_8px_24px_rgba(108,99,255,0.14)]"
+                >
                     Verify Email
                 </button>
+
+                {/* small helper text */}
+                <p className="text-center text-xs text-gray-400 mt-4">
+                    Didn't receive the code?{" "}
+                    <span
+                        onClick={() => {
+                            // if you have resend endpoint you can wire it here later
+                            toast.info("Resend OTP feature coming soon");
+                        }}
+                        className="text-[#00C2FF] cursor-pointer underline"
+                    >
+                        Resend
+                    </span>
+                </p>
             </form>
+
+            {/* subtle neon radial glow behind the form */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="w-96 h-96 rounded-full bg-[radial-gradient(circle,rgba(0,194,255,0.06),transparent_40%)]" />
+            </div>
         </div>
     );
 };

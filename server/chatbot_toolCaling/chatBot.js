@@ -1,5 +1,4 @@
 import Groq from "groq-sdk";
-import readline from "node:readline/promises";
 import { tavily } from "@tavily/core";
 import NodeCache from "node-cache";
 

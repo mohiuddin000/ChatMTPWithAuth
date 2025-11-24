@@ -101,59 +101,80 @@ const ResetPassword = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-200 to-purple-400">
+        <div
+            className="flex items-center justify-center min-h-screen
+                        bg-[#0d1117] bg-gradient-to-br from-[#0d1117] via-[#0a0f1f] to-[#000000] relative px-4"
+        >
+            {/* Logo with neon glow */}
             <img
                 onClick={() => navigate("/")}
-                src={assets.logo}
+                src={assets.chatMTP_logo}
                 alt=""
-                className="absolute left-5 sm:left-20 top-5 w-28 sm:w-32 cursor-pointer"
+                className="absolute left-5 sm:left-20 top-5 w-10 sm:w-20 cursor-pointer
+                           drop-shadow-[0_0_18px_rgba(0,194,255,0.35)]"
             />
 
             {/* Enter email id */}
             {!isEmailSent && (
                 <form
                     onSubmit={onSubmitEmail}
-                    className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+                    className="relative w-full max-w-md p-8 sm:p-10 rounded-2xl
+                               bg-[#0d1117] bg-gradient-to-br from-[#0d1117] via-[#0a0f1f] to-[#000000]
+                               border border-[#00C2FF]/10 shadow-[0_20px_40px_rgba(2,6,23,0.75)]
+                               text-sm"
                 >
-                    <h1 className="text-white text-2xl font-semibold text-center mb-4">
+                    <h1 className="text-white text-2xl font-semibold text-center mb-3">
                         Reset Password
                     </h1>
-                    <p className="text-center mb-6 text-indigo-300">
+                    <p className="text-center mb-6 text-gray-400">
                         Enter your registered email to receive a password reset
                         OTP.
                     </p>
-                    <div className="mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#333A5C]">
+
+                    <div
+                        className="mb-4 flex items-center gap-3 w-full px-4 py-3 rounded-full
+                                   bg-[rgba(255,255,255,0.02)] border border-[#00C2FF]/8"
+                    >
                         <img
                             src={assets.mail_icon}
                             alt=""
-                            className="w-3 h-3"
+                            className="w-5 h-5 opacity-90"
                         />
                         <input
                             type="email"
                             placeholder="Email ID"
-                            className="bg-transparent outline-none text-white"
+                            className="bg-transparent outline-none text-gray-100 w-full placeholder-gray-400"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
                         />
                     </div>
-                    <button className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-900 text-white rounded-full mt-3">
+
+                    <button
+                        className="w-full py-2.5 rounded-full
+                                   bg-gradient-to-r from-[#00C2FF] to-[#6C63FF]
+                                   text-black font-semibold
+                                   hover:brightness-105 transition-all duration-200
+                                   shadow-[0_8px_24px_rgba(108,99,255,0.14)]"
+                    >
                         Submit
                     </button>
                 </form>
             )}
 
-            {/* Enter otp from  */}
-
+            {/* Enter otp */}
             {!isOtoSubmitted && isEmailSent && (
                 <form
                     onSubmit={onSubmitOtp}
-                    className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+                    className="relative w-full max-w-md p-8 sm:p-10 rounded-2xl
+                               bg-[#0d1117] bg-gradient-to-br from-[#0d1117] via-[#0a0f1f] to-[#000000]
+                               border border-[#00C2FF]/10 shadow-[0_20px_40px_rgba(2,6,23,0.75)]
+                               text-sm"
                 >
-                    <h1 className="text-white text-2xl font-semibold text-center mb-4">
+                    <h1 className="text-white text-2xl font-semibold text-center mb-3">
                         Reset password OTP
                     </h1>
-                    <p className="text-center mb-6 text-indigo-300">
+                    <p className="text-center mb-6 text-gray-400">
                         Enter the 6-digit code sent to your Email ID
                     </p>
 
@@ -169,51 +190,78 @@ const ResetPassword = () => {
                                     maxLength="1"
                                     required
                                     key={index}
-                                    className="w-12 h-12 bg-[#333A5C] text-white text-center text-xl rounded-md"
+                                    className="w-12 h-12 text-white text-center text-xl rounded-md
+                                               bg-[rgba(255,255,255,0.02)] border border-[#00C2FF]/12
+                                               focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30"
                                     ref={(e) => (inputRefs.current[index] = e)}
                                     onInput={(e) => handleInput(e, index)}
                                     onKeyDown={(e) => handleKeyDown(e, index)}
                                 />
                             ))}
                     </div>
-                    <button className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-900 text-white rounded-full">
+                    <button
+                        className="w-full py-2.5 rounded-full
+                                   bg-gradient-to-r from-[#00C2FF] to-[#6C63FF]
+                                   text-black font-semibold
+                                   hover:brightness-105 transition-all duration-200
+                                   shadow-[0_8px_24px_rgba(108,99,255,0.14)]"
+                    >
                         Submit
                     </button>
                 </form>
             )}
-            {/* Enter New password  */}
 
+            {/* Enter New password */}
             {isOtoSubmitted && isEmailSent && (
                 <form
                     onSubmit={onSubmitNewPassword}
-                    className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+                    className="relative w-full max-w-md p-8 sm:p-10 rounded-2xl
+                               bg-[#0d1117] bg-gradient-to-br from-[#0d1117] via-[#0a0f1f] to-[#000000]
+                               border border-[#00C2FF]/10 shadow-[0_20px_40px_rgba(2,6,23,0.75)]
+                               text-sm"
                 >
-                    <h1 className="text-white text-2xl font-semibold text-center mb-4">
+                    <h1 className="text-white text-2xl font-semibold text-center mb-3">
                         New Password
                     </h1>
-                    <p className="text-center mb-6 text-indigo-300">
+                    <p className="text-center mb-6 text-gray-400">
                         Enter your new password to reset it.
                     </p>
-                    <div className="mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#333A5C]">
+
+                    <div
+                        className="mb-4 flex items-center gap-3 w-full px-4 py-3 rounded-full
+                                   bg-[rgba(255,255,255,0.02)] border border-[#00C2FF]/8"
+                    >
                         <img
                             src={assets.lock_icon}
                             alt=""
-                            className="w-3 h-3"
+                            className="w-5 h-5 opacity-90"
                         />
                         <input
                             type="password"
                             placeholder="New Password"
-                            className="bg-transparent outline-none text-white"
+                            className="bg-transparent outline-none text-gray-100 w-full placeholder-gray-400"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             required
                         />
                     </div>
-                    <button className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-900 text-white rounded-full mt-3">
+
+                    <button
+                        className="w-full py-2.5 rounded-full
+                                   bg-gradient-to-r from-[#00C2FF] to-[#6C63FF]
+                                   text-black font-semibold
+                                   hover:brightness-105 transition-all duration-200
+                                   shadow-[0_8px_24px_rgba(108,99,255,0.14)] mt-3"
+                    >
                         Submit
                     </button>
                 </form>
             )}
+
+            {/* subtle radial glow behind forms */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="w-96 h-96 rounded-full bg-[radial-gradient(circle,rgba(0,194,255,0.06),transparent_40%)]" />
+            </div>
         </div>
     );
 };
