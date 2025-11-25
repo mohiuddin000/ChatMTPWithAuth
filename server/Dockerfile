@@ -1,46 +1,49 @@
-# ---------- STAGE 1: install deps ----------
+# server/Dockerfile
+# Multi-stage Dockerfile for Node/Express (production-ready)
+
+# --- STAGE 1: install all dependencies (needed if there's a build step) ---
 FROM node:20-alpine AS deps
 WORKDIR /usr/src/app
 
-# Optional: install tini for proper PID 1 handling
-RUN apk add --no-cache tini
+# small extras useful during builds
+RUN apk add --no-cache bash git openssh-client ca-certificates
 
-# Copy only package manifests to leverage Docker cache
+# copy package manifests first to leverage cache
 COPY package*.json ./
-# Install production dependencies
-# Use npm ci if package-lock.json present, otherwise npm install
-RUN if [ -f package-lock.json ]; then npm ci --only=production; else npm install --only=production; fi
 
-# ---------- STAGE 2: build (if needed) ----------
+# install all dependencies (dev + prod) to allow build steps that need dev deps
+RUN npm ci
+
+# --- STAGE 2: build (optional) ---
 FROM node:20-alpine AS builder
 WORKDIR /usr/src/app
 
-# Copy node_modules from deps stage
+# copy node_modules to builder
 COPY --from=deps /usr/src/app/node_modules ./node_modules
-
-# Copy application source
+# copy source
 COPY . .
 
-# If you have a build step (TypeScript / bundler), run it here.
-# Uncomment if needed:
-# RUN npm run build
+# If a build script exists in package.json, run it (creates dist/build)
+RUN if [ -f package.json ] && grep -q '"build"' package.json; then npm run build; fi
 
-# ---------- STAGE 3: runtime ----------
+# --- STAGE 3: runtime (small image) ---
 FROM node:20-alpine AS runtime
 WORKDIR /usr/src/app
 
-# Create a non-root user for security
+# create non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy app files and node_modules from builder
+# copy only necessary files from builder
 COPY --from=builder /usr/src/app ./
 
-# Ensure .env is not baked into the image; use env vars at runtime (Render will provide them)
-# Expose is optional; Render sets PORT via env var
+# prune dev dependencies (best-effort)
+RUN npm prune --production || true
+
+# optionally expose port (Render provides PORT via env)
 EXPOSE 3000
 
-# Use tini as init (installed in deps stage)
+# use tini (already in base image) as init -- helps signal handling
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# Use npm start (ensure package.json has a start script that runs your entrypoint)
+# command: rely on package.json "start" script (ensure it exists)
 CMD ["npm", "start"]
