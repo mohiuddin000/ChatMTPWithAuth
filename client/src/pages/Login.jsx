@@ -45,6 +45,8 @@ const Login = () => {
                     }
                 );
 
+                console.log(data);
+
                 if (data.success) {
                     setIsLoggedIn(true);
                     getUserData();
