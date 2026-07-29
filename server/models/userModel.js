@@ -34,6 +34,44 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    chats: [
+        {
+            id: {
+                type: String,
+                required: true,
+            },
+            title: {
+                type: String,
+                default: "New Chat",
+            },
+            messages: {
+                type: [Object],
+                default: [],
+            },
+            createdAt: {
+                type: Date,
+                default: Date.now,
+            },
+            updatedAt: {
+                type: Date,
+                default: Date.now,
+            },
+        },
+    ],
+    memory: {
+        summary: {
+            type: String,
+            default: "",
+        },
+        facts: {
+            type: [String],
+            default: [],
+        },
+        updatedAt: {
+            type: Date,
+            default: null,
+        },
+    },
 });
 
 const userModel = mongoose.model.user || mongoose.model("user", userSchema);

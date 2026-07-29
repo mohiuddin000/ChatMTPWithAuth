@@ -2,7 +2,7 @@ import axios from "axios";
 import { useState, useRef, useEffect, useContext } from "react";
 import { AppContent } from "../context/AppContext";
 
-export default function AssistantChat() {
+export default function AssistantChat({ currentChatId }) {
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState([]); // { role: "user" | "assistant", text: string }
     const [loading, setLoading] = useState(false);
@@ -16,6 +16,15 @@ export default function AssistantChat() {
         Date.now().toString(36) + Math.random().toString(36).substring(2)
     );
 
+    // Load messages when chat changes
+    useEffect(() => {
+        if (currentChatId && userData?.id) {
+            loadChatMessages();
+        } else {
+            setMessages([]);
+        }
+    }, [currentChatId, userData]);
+
     // auto scroll to bottom when new message is added
     useEffect(() => {
         const el = chatContainerRef.current;
@@ -24,32 +33,31 @@ export default function AssistantChat() {
         }
     }, [messages, loading]);
 
+    const loadChatMessages = async () => {
+        try {
+            const response = await axios.get(
+                `${backendUrl}/api/chat/${userData.id}/messages/${currentChatId}`
+            );
+            setMessages(response.data.messages || []);
+        } catch (error) {
+            console.error("Error loading chat messages:", error);
+            setMessages([]);
+        }
+    };
+
     async function callServer(question) {
         try {
             const response = await axios.post(
-                backendUrl + "/api/user/chatbot",
+                `${backendUrl}/api/chat/${userData.id}/message`,
                 {
-                    // send the actual string value, not the ref object
-                    threadId: threadIdRef.current,
-                    message: question,
+                    role: "user",
+                    text: question,
+                    chatId: currentChatId,
                 }
             );
 
-            // handle different possible response shapes robustly
-            const assistantMessage = response.data.data;
-
-            console.log("Server response:", assistantMessage);
-            // if nothing found, return full JSON as fallback string (or throw)
-            if (!assistantMessage) {
-                console.warn(
-                    "Unexpected response shape from server",
-                    response.data
-                );
-                // return a friendly fallback so UI doesn't break
-                return JSON.stringify(response.data);
-            }
-
-            return assistantMessage;
+            console.log("Server response:", response.data);
+            return response.data.response;
         } catch (err) {
             console.error("Error calling server:", err);
             throw new Error("Server error");
