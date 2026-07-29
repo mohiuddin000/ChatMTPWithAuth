@@ -1,12 +1,14 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AssistantChat from "../components/AssistantChat";
+import HistorySidebar from "../components/HistorySidebar";
 import { AppContent } from "../context/AppContext";
 import Navbar from "../components/Navbar";
 
 function ChatPage() {
     const { isLoggedin } = useContext(AppContent);
     const navigate = useNavigate();
+    const [currentChatId, setCurrentChatId] = useState(null);
 
     useEffect(() => {
         // If the app explicitly knows the user is NOT logged in, redirect to login.
@@ -24,11 +26,23 @@ function ChatPage() {
         );
     }
 
+    const handleChatSelect = (chatId) => {
+        setCurrentChatId(chatId);
+    };
+
     // Only render the chat when logged in
     return isLoggedin ? (
         <>
             <Navbar />
-            <AssistantChat />
+            <div className="flex h-screen pt-16">
+                <HistorySidebar
+                    onChatSelect={handleChatSelect}
+                    currentChatId={currentChatId}
+                />
+                <div className="flex-1">
+                    <AssistantChat currentChatId={currentChatId} />
+                </div>
+            </div>
         </>
     ) : null;
 }

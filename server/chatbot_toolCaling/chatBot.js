@@ -14,9 +14,10 @@ export async function generate(userMessage, threadId) {
     const baseMessages = [
         {
             role: "system",
-            content: `You are Jarvis, a samrt personal assistant.Who answer the asked question.
+            content: `You are Jarvis, a smart personal assistant who answers the asked question.
             Use the webSearch tool to search the web for relevant information when needed.
-            current date and time = ${new Date().toUTCString()}`,
+            Always respond in a helpful and accurate manner.
+            Current date and time: ${new Date().toUTCString()}`,
         },
         // {
         //     role: "user",
@@ -110,9 +111,8 @@ async function webSearch({ query }) {
     const response = await tvly.search(query);
     // console.log("web search response:", response);
 
-    const finalResult = response.results
-        .map((result) => result.content)
-        .join("\n\n");
+    const finalResult =
+        response.results[0]?.content || "No relevant information found.";
 
     // console.log("final result:", finalResult);
     return finalResult;
