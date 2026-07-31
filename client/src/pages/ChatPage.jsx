@@ -11,17 +11,20 @@ function ChatPage() {
     const [currentChatId, setCurrentChatId] = useState(null);
 
     useEffect(() => {
-        // If the app explicitly knows the user is NOT logged in, redirect to login.
+        // Only redirect once we KNOW for sure the user is logged out.
         if (isLoggedin === false) {
             navigate("/login");
         }
     }, [isLoggedin, navigate]);
 
-    // While the auth state is unknown (app still loading), show a minimal loader.
+    // While auth state is still unknown, show a minimal loader —
+    // never redirect during this phase.
     if (isLoggedin === undefined || isLoggedin === null) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0d1117]">
-                <div className="text-gray-300">Checking authentication…</div>
+            <div className="min-h-screen flex items-center justify-center bg-bg">
+                <div className="text-sm text-text-muted font-mono">
+                    Checking authentication…
+                </div>
             </div>
         );
     }
@@ -30,16 +33,15 @@ function ChatPage() {
         setCurrentChatId(chatId);
     };
 
-    // Only render the chat when logged in
     return isLoggedin ? (
         <>
             <Navbar />
-            <div className="flex h-screen pt-16">
+            <div className="flex h-screen pt-16 bg-bg">
                 <HistorySidebar
                     onChatSelect={handleChatSelect}
                     currentChatId={currentChatId}
                 />
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                     <AssistantChat currentChatId={currentChatId} />
                 </div>
             </div>

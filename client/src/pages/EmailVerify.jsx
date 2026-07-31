@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useRef } from "react";
-import { assets } from "../assets/assets";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { AppContent } from "../context/AppContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +10,7 @@ const EmailVerify = () => {
     const { backendUrl, isLoggedin, userData, getUserData } =
         useContext(AppContent);
     const inputRefs = useRef([]);
+    const [loading, setLoading] = useState(false);
 
     const handleInput = (e, index) => {
         if (e.target.value.length > 0 && index < inputRefs.current.length - 1) {
@@ -39,41 +39,42 @@ const EmailVerify = () => {
                 if (inputRefs.current[index]) {
                     inputRefs.current[index].value = char;
                     inputRefs.current[index].dispatchEvent(
-                        new Event("input", { bubbles: true })
+                        new Event("input", { bubbles: true }),
                     );
                 }
             });
-            inputRefs.current[5].focus(); // Focus the last input after pasting
+            inputRefs.current[5].focus();
         } else {
-            e.preventDefault(); // Prevent paste if not exactly 6 characters
+            e.preventDefault();
         }
     };
 
     const onSubmitHandler = async (e) => {
-        try {
-            e.preventDefault();
-            const otp = inputRefs.current.map((e) => e.value).join("");
-            if (otp.length !== 6) {
-                toast.error("Please enter a valid 6-digit OTP");
-                return;
-            }
+        e.preventDefault();
+        const otp = inputRefs.current.map((el) => el.value).join("");
+        if (otp.length !== 6) {
+            toast.error("Please enter a valid 6-digit code");
+            return;
+        }
 
+        setLoading(true);
+        try {
             const { data } = await axios.post(
                 backendUrl + "/api/auth/verify-account",
-                { otp }
+                { otp },
             );
 
-            console.log("OTP verification response:", data);
-
             if (data.success) {
-                toast.success("Email verified successfully!");
+                toast.success("Email verified");
                 getUserData();
                 navigate("/");
             } else {
                 toast.error(data.message || "Verification failed");
             }
         } catch (error) {
-            toast.error(error.message || "Verification failed");
+            toast.error("Verification failed. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -82,29 +83,20 @@ const EmailVerify = () => {
     }, [isLoggedin, userData]);
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-[#0d1117] bg-gradient-to-br from-[#0d1117] via-[#0a0f1f] to-[#000000] relative px-4">
-            {/* Logo with neon glow */}
-            <img
+        <div className="min-h-screen flex items-center justify-center bg-bg px-5">
+            <button
                 onClick={() => navigate("/")}
-                src={assets.chatMTP_logo}
-                alt=""
-                className="absolute left-5 sm:left-20 top-5 w-10 sm:w-20 cursor-pointer
-                           drop-shadow-[0_0_18px_rgba(0,194,255,0.35)]"
-            />
-
-            <form
-                onSubmit={onSubmitHandler}
-                className="relative w-full max-w-md p-8 sm:p-10 rounded-2xl
-                           bg-[#0d1117] bg-gradient-to-br from-[#0d1117] via-[#0a0f1f] to-[#000000]
-                           border border-[#00C2FF]/8
-                           shadow-[0_20px_40px_rgba(2,6,23,0.75)]
-                           text-sm"
+                className="fixed left-5 sm:left-8 top-5 font-display font-semibold text-lg tracking-tight text-text hover:text-accent transition-colors"
             >
-                <h1 className="text-white text-2xl font-semibold text-center mb-2">
-                    Verify OTP
+                ChatMTP
+            </button>
+
+            <form onSubmit={onSubmitHandler} className="w-full max-w-sm">
+                <h1 className="font-display text-2xl font-semibold text-text mb-1">
+                    Verify your email
                 </h1>
-                <p className="text-center mb-6 text-gray-400">
-                    Enter the 6-digit code sent to your Email ID
+                <p className="text-sm text-text-muted mb-8">
+                    Enter the 6-digit code we sent to your email.
                 </p>
 
                 <div
@@ -115,52 +107,37 @@ const EmailVerify = () => {
                         .fill(0)
                         .map((_, index) => (
                             <input
+                                key={index}
                                 type="text"
+                                inputMode="numeric"
                                 maxLength="1"
                                 required
-                                key={index}
-                                ref={(e) => (inputRefs.current[index] = e)}
+                                ref={(el) => (inputRefs.current[index] = el)}
                                 onInput={(e) => handleInput(e, index)}
                                 onKeyDown={(e) => handleKeyDown(e, index)}
-                                className="
-                                    w-12 h-12 text-white text-center text-xl rounded-md
-                                    bg-[rgba(255,255,255,0.02)] border border-[#00C2FF]/12
-                                    focus:outline-none focus:ring-2 focus:ring-[#00C2FF]/30
-                                    placeholder-gray-400
-                                "
+                                className="w-11 h-12 text-center text-lg font-mono rounded-md border border-border bg-bg text-text outline-none focus:border-accent transition-colors"
                             />
                         ))}
                 </div>
 
                 <button
-                    className="w-full py-3 rounded-full
-                               bg-gradient-to-r from-[#00C2FF] to-[#6C63FF]
-                               text-black font-semibold
-                               hover:brightness-105 transition-all duration-200
-                               shadow-[0_8px_24px_rgba(108,99,255,0.14)]"
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-accent text-white text-sm font-medium py-2.5 rounded-md hover:bg-accent-hover transition-colors disabled:opacity-60"
                 >
-                    Verify Email
+                    {loading ? "Verifying…" : "Verify email"}
                 </button>
 
-                {/* small helper text */}
-                <p className="text-center text-xs text-gray-400 mt-4">
-                    Didn't receive the code?{" "}
+                <p className="text-center text-sm text-text-muted mt-6">
+                    Didn't get a code?{" "}
                     <span
-                        onClick={() => {
-                            // if you have resend endpoint you can wire it here later
-                            toast.info("Resend OTP feature coming soon");
-                        }}
-                        className="text-[#00C2FF] cursor-pointer underline"
+                        onClick={() => toast.info("Resend is coming soon")}
+                        className="text-accent hover:text-accent-hover cursor-pointer font-medium"
                     >
                         Resend
                     </span>
                 </p>
             </form>
-
-            {/* subtle neon radial glow behind the form */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="w-96 h-96 rounded-full bg-[radial-gradient(circle,rgba(0,194,255,0.06),transparent_40%)]" />
-            </div>
         </div>
     );
 };

@@ -1,5 +1,4 @@
 import React, { useContext, useState } from "react";
-import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import { AppContent } from "../context/AppContext";
 import axios from "axios";
@@ -8,30 +7,29 @@ import { toast } from "react-toastify";
 const Login = () => {
     const { backendUrl, setIsLoggedIn, getUserData } = useContext(AppContent);
 
-    const [state, setState] = useState("Sign Up");
+    const [state, setState] = useState("Login");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
 
     const onSubmitHandler = async (e) => {
+        e.preventDefault();
+        setLoading(true);
         try {
-            e.preventDefault();
             axios.defaults.withCredentials = true;
-            if (state == "Sign Up") {
+
+            if (state === "Sign Up") {
                 const { data } = await axios.post(
                     backendUrl + "/api/auth/register",
-                    {
-                        name,
-                        email,
-                        password,
-                    }
+                    { name, email, password },
                 );
 
                 if (data.success) {
                     setIsLoggedIn(true);
-                    getUserData();
+                    await getUserData();
                     navigate("/chat");
                 } else {
                     toast.error(data.message);
@@ -39,165 +37,153 @@ const Login = () => {
             } else {
                 const { data } = await axios.post(
                     backendUrl + "/api/auth/login",
-                    {
-                        email,
-                        password,
-                    }
+                    { email, password },
                 );
-
-                console.log(data);
 
                 if (data.success) {
                     setIsLoggedIn(true);
-                    getUserData();
+                    await getUserData();
                     navigate("/chat");
                 } else {
-                    console.log(data);
-                    // alert(data.message);
                     toast.error(data.message);
                 }
             }
         } catch (error) {
-            console.error("Error during authentication:", error);
-            toast.error(error.message);
+            toast.error("Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen px-6 sm:px-0 bg-[#0d1117]">
-            {/* Logo (glow) */}
-            <img
+        <div className="min-h-screen flex items-center justify-center bg-bg px-5">
+            <button
                 onClick={() => navigate("/")}
-                src={assets.chatMTP_logo}
-                alt="Logo"
-                className="absolute left-5 sm:left-20 top-5 w-10 sm:w-20 cursor-pointer
-                           drop-shadow-[0_0_18px_rgba(0,194,255,0.35)]"
-            />
-
-            <div
-                className="relative w-full sm:w-96 p-8 sm:p-10 rounded-2xl
-                            bg-gradient-to-br from-[rgba(255,255,255,0.03)] to-[rgba(255,255,255,0.01)]
-                            border border-[#00C2FF]/10
-                            backdrop-blur-md
-                            shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+                className="fixed left-5 sm:left-8 top-5 font-display font-semibold text-lg tracking-tight text-text hover:text-accent transition-colors"
             >
-                <h2 className="text-3xl font-semibold text-white text-center mb-3">
-                    {state === "Sign Up" ? "Create Account" : "Login"}
-                </h2>
+                ChatMTP
+            </button>
 
-                <p className="text-center text-sm mb-6 text-gray-400">
+            <div className="w-full max-w-sm">
+                {/* Pill toggle */}
+                <div className="flex p-1 mb-8 rounded-lg bg-surface border border-border">
+                    {["Login", "Sign Up"].map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setState(tab)}
+                            className={`flex-1 text-sm font-medium py-2 rounded-md transition-colors ${
+                                state === tab
+                                    ? "bg-bg text-text shadow-sm border border-border"
+                                    : "text-text-muted hover:text-text"
+                            }`}
+                        >
+                            {tab === "Login" ? "Log in" : "Sign up"}
+                        </button>
+                    ))}
+                </div>
+
+                <h1 className="font-display text-2xl font-semibold text-text mb-1">
                     {state === "Sign Up"
                         ? "Create your account"
-                        : "Login to your account!"}
+                        : "Welcome back"}
+                </h1>
+                <p className="text-sm text-text-muted mb-6">
+                    {state === "Sign Up"
+                        ? "Start a new conversation history."
+                        : "Log in to continue where you left off."}
                 </p>
 
-                <form onSubmit={onSubmitHandler}>
+                <form onSubmit={onSubmitHandler} className="space-y-4">
                     {state === "Sign Up" && (
-                        <div
-                            className="mb-4 flex items-center gap-3 w-full px-4 py-3 rounded-full
-                                        bg-[rgba(255,255,255,0.02)] border border-[#00C2FF]/8"
-                        >
-                            <img
-                                src={assets.person_icon}
-                                alt=""
-                                className="w-5 h-5 opacity-90"
-                            />
+                        <div>
+                            <label className="block text-xs font-medium text-text-muted mb-1.5">
+                                Full name
+                            </label>
                             <input
                                 onChange={(e) => setName(e.target.value)}
                                 value={name}
                                 type="text"
-                                className="bg-transparent outline-none placeholder-gray-400 text-gray-100 w-full"
-                                placeholder="Full Name"
                                 required
+                                className="w-full px-3.5 py-2.5 rounded-md border border-border bg-bg text-text text-sm outline-none focus:border-accent transition-colors"
+                                placeholder="Jane Doe"
                             />
                         </div>
                     )}
 
-                    <div
-                        className="mb-4 flex items-center gap-3 w-full px-4 py-3 rounded-full
-                                    bg-[rgba(255,255,255,0.02)] border border-[#00C2FF]/8"
-                    >
-                        <img
-                            src={assets.mail_icon}
-                            alt=""
-                            className="w-5 h-5 opacity-90"
-                        />
+                    <div>
+                        <label className="block text-xs font-medium text-text-muted mb-1.5">
+                            Email
+                        </label>
                         <input
                             onChange={(e) => setEmail(e.target.value)}
                             value={email}
                             type="email"
-                            className="bg-transparent outline-none placeholder-gray-400 text-gray-100 w-full"
-                            placeholder="Email Id"
                             required
+                            className="w-full px-3.5 py-2.5 rounded-md border border-border bg-bg text-text text-sm outline-none focus:border-accent transition-colors"
+                            placeholder="you@example.com"
                         />
                     </div>
 
-                    <div
-                        className="mb-4 flex items-center gap-3 w-full px-4 py-3 rounded-full
-                                    bg-[rgba(255,255,255,0.02)] border border-[#00C2FF]/8"
-                    >
-                        <img
-                            src={assets.lock_icon}
-                            alt=""
-                            className="w-5 h-5 opacity-90"
-                        />
+                    <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                            <label className="block text-xs font-medium text-text-muted">
+                                Password
+                            </label>
+                            {state === "Login" && (
+                                <span
+                                    onClick={() => navigate("/reset-password")}
+                                    className="text-xs text-accent hover:text-accent-hover cursor-pointer"
+                                >
+                                    Forgot password?
+                                </span>
+                            )}
+                        </div>
                         <input
                             onChange={(e) => setPassword(e.target.value)}
                             value={password}
                             type="password"
-                            className="bg-transparent outline-none placeholder-gray-400 text-gray-100 w-full"
-                            placeholder="Password"
                             required
+                            className="w-full px-3.5 py-2.5 rounded-md border border-border bg-bg text-text text-sm outline-none focus:border-accent transition-colors"
+                            placeholder="••••••••"
                         />
                     </div>
 
-                    {state === "Login" && (
-                        <p
-                            onClick={() => navigate("/reset-password")}
-                            className="mb-4 text-sm text-[#00C2FF] cursor-pointer hover:underline"
-                        >
-                            Forgot password?
-                        </p>
-                    )}
-
                     <button
-                        className="w-full py-2.5 rounded-full
-                                   bg-gradient-to-r from-[#00C2FF] to-[#6C63FF]
-                                   text-black font-semibold
-                                   hover:brightness-110 transition-all duration-200
-                                   shadow-[0_8px_24px_rgba(108,99,255,0.16)]"
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-accent text-white text-sm font-medium py-2.5 rounded-md hover:bg-accent-hover transition-colors disabled:opacity-60 mt-2"
                     >
-                        {state}
+                        {loading
+                            ? "Please wait…"
+                            : state === "Sign Up"
+                              ? "Create account"
+                              : "Log in"}
                     </button>
                 </form>
 
-                {state === "Sign Up" ? (
-                    <p className="text-gray-400 text-center text-xs mt-4">
-                        Already have an account?{" "}
-                        <span
-                            onClick={() => setState("Login")}
-                            className="text-[#00C2FF] cursor-pointer underline"
-                        >
-                            Login here
-                        </span>
-                    </p>
-                ) : (
-                    <p className="text-gray-400 text-center text-xs mt-4">
-                        Don't have an account?{" "}
-                        <span
-                            onClick={() => setState("Sign Up")}
-                            className="text-[#00C2FF] cursor-pointer underline"
-                        >
-                            Sign up
-                        </span>
-                    </p>
-                )}
-
-                {/* subtle neon bottom glow */}
-                <div
-                    className="pointer-events-none absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-64 h-2
-                                rounded-full bg-gradient-to-r from-[#00C2FF] to-[#6C63FF] opacity-20 blur-[18px]"
-                ></div>
+                <p className="text-center text-sm text-text-muted mt-6">
+                    {state === "Sign Up" ? (
+                        <>
+                            Already have an account?{" "}
+                            <span
+                                onClick={() => setState("Login")}
+                                className="text-accent hover:text-accent-hover cursor-pointer font-medium"
+                            >
+                                Log in
+                            </span>
+                        </>
+                    ) : (
+                        <>
+                            Don't have an account?{" "}
+                            <span
+                                onClick={() => setState("Sign Up")}
+                                className="text-accent hover:text-accent-hover cursor-pointer font-medium"
+                            >
+                                Sign up
+                            </span>
+                        </>
+                    )}
+                </p>
             </div>
         </div>
     );

@@ -9,6 +9,11 @@ import authRouter from "./routes/authRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import chatRouter from "./routes/chatRoutes.js";
 
+import dns from "node:dns";
+
+// Force Google DNS
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -86,7 +91,7 @@ async function startServer() {
             console.log(
                 `Server is running on port ${PORT} (env=${
                     process.env.NODE_ENV || "dev"
-                })`
+                })`,
             );
         });
 

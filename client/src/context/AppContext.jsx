@@ -8,7 +8,12 @@ export const AppContextProvider = (props) => {
     axios.defaults.withCredentials = true;
 
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
-    const [isLoggedin, setIsLoggedIn] = useState(false);
+
+    // isLoggedin starts as `null` = "we don't know yet" (auth check still
+    // running). Only becomes true/false once getAuthStatus() resolves.
+    // This prevents pages from redirecting to /login before the real
+    // auth status has been confirmed.
+    const [isLoggedin, setIsLoggedIn] = useState(null);
     const [userData, setUserData] = useState(false);
 
     const getAuthStatus = async () => {
@@ -17,21 +22,26 @@ export const AppContextProvider = (props) => {
             if (data.success) {
                 setIsLoggedIn(true);
                 getUserData();
+            } else {
+                setIsLoggedIn(false);
+                setUserData(false);
             }
         } catch (error) {
-            toast.error(error.message);
+            setIsLoggedIn(false);
+            setUserData(false);
         }
     };
 
     const getUserData = async () => {
         try {
             const { data } = await axios.get(backendUrl + "/api/user/data");
-            console.log("User data fetched:", data);
-            data.success
-                ? setUserData(data.userData)
-                : toast.error(data.message);
+            if (data.success) {
+                setUserData(data.userData);
+            } else {
+                toast.error(data.message);
+            }
         } catch (error) {
-            toast.error(error.message);
+            toast.error("Could not load your account data.");
         }
     };
 
@@ -40,7 +50,6 @@ export const AppContextProvider = (props) => {
     }, []);
 
     const value = {
-        // Define any state or functions you want to provide to the context
         backendUrl,
         isLoggedin,
         setIsLoggedIn,

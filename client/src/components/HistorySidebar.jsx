@@ -16,7 +16,7 @@ export default function HistorySidebar({ onChatSelect, currentChatId }) {
 
         try {
             const response = await axios.get(
-                `${backendUrl}/api/chat/${userData.id}/history`
+                `${backendUrl}/api/chat/${userData.id}/history`,
             );
             setChats(response.data.data.chats || []);
         } catch (error) {
@@ -31,7 +31,7 @@ export default function HistorySidebar({ onChatSelect, currentChatId }) {
 
         try {
             const response = await axios.post(
-                `${backendUrl}/api/chat/${userData.id}/newchat`
+                `${backendUrl}/api/chat/${userData.id}/newchat`,
             );
             const newChat = response.data.history;
             setChats((prev) => [newChat, ...prev]);
@@ -71,43 +71,45 @@ export default function HistorySidebar({ onChatSelect, currentChatId }) {
     const groupedChats = groupChatsByDate(chats);
 
     return (
-        <div className="w-80 bg-[#0d1117] border-r border-[#00C2FF]/10 flex flex-col h-full">
-            {/* Header */}
-            <div className="p-4 border-b border-[#00C2FF]/10">
+        <div className="w-72 shrink-0 bg-surface border-r border-border flex flex-col h-full">
+            <div className="p-3 border-b border-border">
                 <button
                     onClick={createNewChat}
-                    className="w-full bg-gradient-to-r from-[#00C2FF] to-[#6C63FF] text-black px-4 py-2 rounded-lg hover:brightness-105 transition-all duration-150 font-medium"
+                    className="w-full flex items-center justify-center gap-1.5 bg-accent text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-accent-hover transition-colors"
                 >
-                    New Chat
+                    <span aria-hidden="true">+</span> New chat
                 </button>
             </div>
 
-            {/* Chat List */}
             <div className="flex-1 overflow-y-auto p-2">
                 {loading ? (
-                    <div className="text-center text-gray-400 py-8">
-                        Loading...
+                    <div className="text-center text-sm text-text-muted py-8">
+                        Loading…
+                    </div>
+                ) : chats.length === 0 ? (
+                    <div className="text-center text-sm text-text-muted px-4 py-8">
+                        No conversations yet. Start a new chat to begin.
                     </div>
                 ) : (
                     Object.entries(groupedChats).map(([date, dateChats]) => (
                         <div key={date} className="mb-4">
-                            <div className="text-xs text-gray-500 uppercase tracking-wide px-2 py-1 mb-2">
+                            <div className="font-mono text-[10px] uppercase tracking-wide text-text-muted px-2 py-1 mb-1">
                                 {date}
                             </div>
                             {dateChats.map((chat) => (
                                 <div
                                     key={chat.id}
                                     onClick={() => onChatSelect(chat.id)}
-                                    className={`px-3 py-2 mx-1 rounded-lg cursor-pointer transition-all duration-150 ${
+                                    className={`px-3 py-2 mx-0.5 mb-0.5 rounded-md cursor-pointer transition-colors ${
                                         chat.id === currentChatId
-                                            ? "bg-[#00C2FF]/10 border border-[#00C2FF]/20"
-                                            : "hover:bg-[#071122] border border-transparent"
+                                            ? "bg-accent-soft"
+                                            : "hover:bg-surface-hover"
                                     }`}
                                 >
-                                    <div className="text-sm text-gray-200 truncate">
-                                        {chat.title || "New Chat"}
+                                    <div className="text-sm text-text truncate">
+                                        {chat.title || "New chat"}
                                     </div>
-                                    <div className="text-xs text-gray-500 mt-1">
+                                    <div className="text-xs text-text-muted mt-0.5">
                                         {chat.messages?.length || 0} messages
                                     </div>
                                 </div>

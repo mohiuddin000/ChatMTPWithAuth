@@ -7,16 +7,10 @@ export default function AssistantChat({ currentChatId }) {
     const [messages, setMessages] = useState([]); // { role: "user" | "assistant", text: string }
     const [loading, setLoading] = useState(false);
     const chatContainerRef = useRef(null);
+    const textareaRef = useRef(null);
 
-    const { backendUrl, isLoggedin, userData, getUserData } =
-        useContext(AppContent);
+    const { backendUrl, userData } = useContext(AppContent);
 
-    // keep a stable threadId for this session
-    const threadIdRef = useRef(
-        Date.now().toString(36) + Math.random().toString(36).substring(2)
-    );
-
-    // Load messages when chat changes
     useEffect(() => {
         if (currentChatId && userData?.id) {
             loadChatMessages();
@@ -25,7 +19,6 @@ export default function AssistantChat({ currentChatId }) {
         }
     }, [currentChatId, userData]);
 
-    // auto scroll to bottom when new message is added
     useEffect(() => {
         const el = chatContainerRef.current;
         if (el) {
@@ -33,10 +26,19 @@ export default function AssistantChat({ currentChatId }) {
         }
     }, [messages, loading]);
 
+    // auto-grow textarea up to a max height
+    useEffect(() => {
+        const el = textareaRef.current;
+        if (el) {
+            el.style.height = "auto";
+            el.style.height = Math.min(el.scrollHeight, 160) + "px";
+        }
+    }, [input]);
+
     const loadChatMessages = async () => {
         try {
             const response = await axios.get(
-                `${backendUrl}/api/chat/${userData.id}/messages/${currentChatId}`
+                `${backendUrl}/api/chat/${userData.id}/messages/${currentChatId}`,
             );
             setMessages(response.data.messages || []);
         } catch (error) {
@@ -53,10 +55,8 @@ export default function AssistantChat({ currentChatId }) {
                     role: "user",
                     text: question,
                     chatId: currentChatId,
-                }
+                },
             );
-
-            console.log("Server response:", response.data);
             return response.data.response;
         } catch (err) {
             console.error("Error calling server:", err);
@@ -68,17 +68,12 @@ export default function AssistantChat({ currentChatId }) {
         const question = input.trim();
         if (!question || loading) return;
 
-        // add user message
         setMessages((prev) => [...prev, { role: "user", text: question }]);
         setInput("");
         setLoading(true);
 
         try {
             const assistantMessage = await callServer(question);
-
-            console.log("Assistant message:", assistantMessage);
-
-            // add assistant message
             setMessages((prev) => [
                 ...prev,
                 { role: "assistant", text: assistantMessage },
@@ -88,7 +83,7 @@ export default function AssistantChat({ currentChatId }) {
                 ...prev,
                 {
                     role: "assistant",
-                    text: "Sorry, something went wrong. Please try again.",
+                    text: "Something went wrong on my end. Please try again.",
                 },
             ]);
         } finally {
@@ -97,88 +92,87 @@ export default function AssistantChat({ currentChatId }) {
     }
 
     function handleKeyDown(e) {
-        // Enter to send, Shift+Enter for new line
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
         }
     }
 
+    const hasMessages = messages.length > 0;
+
     return (
-        <div className="min-h-screen bg-[#0d1117] bg-gradient-to-br from-[#0d1117] via-[#071022] to-[#000000] text-gray-100 pt-3 ">
-            <div
-                ref={chatContainerRef}
-                id="chat-container"
-                className="container mx-auto max-w-3xl pb-44 px-4 pt-8"
-            >
-                {/* Chat header (optional space) */}
-                <div className="flex items-center gap-3 mb-6">
-                    <div
-                        className="w-10 h-10 rounded-full bg-[#071122] flex items-center justify-center
-                                    ring-2 ring-[#00C2FF]/25 shadow-[0_6px_24px_rgba(0,194,255,0.08)]"
-                    >
-                        <span className="text-[#00C2FF] font-semibold">AI</span>
-                    </div>
-                    <div>
-                        <div className="text-sm text-[#00C2FF] font-medium">
-                            Assistant
+        <div className="flex flex-col h-full bg-bg">
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
+                <div className="max-w-2xl mx-auto px-5 pt-8 pb-40">
+                    {!hasMessages && !loading ? (
+                        <div className="text-center pt-20">
+                            <p className="font-display text-lg text-text mb-1">
+                                Start a conversation
+                            </p>
+                            <p className="text-sm text-text-muted">
+                                Ask a question below to get going.
+                            </p>
                         </div>
-                        <div className="text-xs text-gray-400">
-                            Ask anything — I'm listening
+                    ) : (
+                        <div className="space-y-5">
+                            {messages.map((msg, idx) =>
+                                msg.role === "user" ? (
+                                    <div key={idx} className="text-right">
+                                        <span className="inline-block text-sm bg-surface text-text rounded-md px-3.5 py-2.5 max-w-[85%] text-left leading-relaxed">
+                                            {msg.text}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <div
+                                        key={idx}
+                                        className="border-l-2 border-accent pl-4"
+                                    >
+                                        <span className="font-mono text-[11px] uppercase tracking-wide text-accent">
+                                            Assistant
+                                        </span>
+                                        <p className="text-sm text-text mt-1 leading-relaxed whitespace-pre-wrap">
+                                            {msg.text}
+                                        </p>
+                                    </div>
+                                ),
+                            )}
+
+                            {loading && (
+                                <div className="border-l-2 border-border pl-4 flex items-center gap-1.5 py-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-text-muted animate-bounce" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-text-muted animate-bounce [animation-delay:0.15s]" />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-text-muted animate-bounce [animation-delay:0.3s]" />
+                                </div>
+                            )}
                         </div>
-                    </div>
+                    )}
                 </div>
-
-                {/* messages */}
-                {messages.map((msg, idx) => (
-                    <div
-                        key={idx}
-                        className={`my-4 max-w-[85%] break-words px-4 py-3 rounded-2xl shadow-sm
-                            ${
-                                msg.role === "user"
-                                    ? "ml-auto bg-gradient-to-r from-[#071122] to-[#071522] text-gray-100 border border-[#00C2FF]/8 shadow-[0_6px_18px_rgba(0,0,0,0.6)]"
-                                    : "mr-auto bg-[linear-gradient(180deg,#071224,#081827)] text-gray-200 border border-[#00C2FF]/10 shadow-[0_6px_20px_rgba(0,194,255,0.04)]"
-                            }`}
-                    >
-                        {msg.text}
-                    </div>
-                ))}
-
-                {/* loading bubbles */}
-                {loading && (
-                    <div className="my-4 max-w-[40%] px-4 py-3 rounded-2xl bg-[linear-gradient(180deg,#071224,#081827)] border border-[#00C2FF]/10 shadow-[0_6px_18px_rgba(0,194,255,0.06)]">
-                        <div className="flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 rounded-full bg-[#00C2FF] animate-bounce" />
-                            <div className="w-2.5 h-2.5 rounded-full bg-[#00C2FF] animate-bounce [animation-delay:0.15s]" />
-                            <div className="w-2.5 h-2.5 rounded-full bg-[#00C2FF] animate-bounce [animation-delay:0.3s]" />
-                        </div>
-                    </div>
-                )}
             </div>
 
-            {/* bottom input bar */}
-            <div className="fixed inset-x-0 bottom-0 flex items-center justify-center pointer-events-none">
-                <div className="pointer-events-auto bg-[linear-gradient(90deg,#071122,rgba(7,17,34,0.85))] border border-[#00C2FF]/8 rounded-3xl w-full max-w-3xl p-3 mb-4 mx-4">
-                    <textarea
-                        id="input"
-                        rows={1}
-                        className="w-full resize-none outline-none p-3 bg-transparent text-gray-100 placeholder-gray-400 rounded-xl min-h-[48px]"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Ask something..."
-                    />
-
-                    <div className="flex items-center justify-end mt-2">
+            {/* composer */}
+            <div className="border-t border-border bg-bg">
+                <div className="max-w-2xl mx-auto px-5 py-4">
+                    <div className="flex items-end gap-2 rounded-lg border border-border focus-within:border-accent transition-colors px-3 py-2">
+                        <textarea
+                            ref={textareaRef}
+                            rows={1}
+                            className="flex-1 resize-none outline-none bg-transparent text-sm text-text placeholder-text-muted py-1.5 max-h-40"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Ask anything…"
+                        />
                         <button
-                            className="inline-flex items-center gap-2 bg-gradient-to-r from-[#00C2FF] to-[#6C63FF] text-black px-4 py-2 rounded-full hover:brightness-105 transition-all duration-150 disabled:opacity-50"
                             onClick={handleSend}
                             disabled={!input.trim() || loading}
-                            id="ask-button"
+                            className="shrink-0 bg-accent text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-accent-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            {loading ? "Thinking..." : "Ask"}
+                            {loading ? "…" : "Send"}
                         </button>
                     </div>
+                    <p className="text-xs text-text-muted mt-2 text-center">
+                        Press Enter to send, Shift + Enter for a new line
+                    </p>
                 </div>
             </div>
         </div>

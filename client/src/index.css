@@ -1,8 +1,49 @@
-/* Importing Google Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
 
 @import "tailwindcss";
-/* Tailwind CSS styles */
+
+@theme {
+    --color-bg: #ffffff;
+    --color-surface: #faf9f7;
+    --color-surface-hover: #f1efeb;
+    --color-border: #e7e5e0;
+    --color-text: #19180f;
+    --color-text-muted: #706c60;
+    --color-accent: #4338ca;
+    --color-accent-hover: #362da8;
+    --color-accent-soft: #eef0ff;
+    --color-error: #b3261e;
+    --color-success: #1e7a4c;
+
+    --font-display: "Instrument Sans", sans-serif;
+    --font-sans: "Inter", sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+}
+
 * {
-  font-family: "Outfit", sans-serif;
+    font-family: var(--font-sans);
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+
+::selection {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
+}
+
+/* Visible keyboard focus everywhere */
+:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
