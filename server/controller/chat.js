@@ -4,6 +4,8 @@ import {
     getChatsAndMemory,
     getChatMessages as getChatMessagesFromDB,
     createNewChat,
+    renameChat as renameChatInDB,
+    deleteChat as deleteChatInDB,
 } from "./userChat.js";
 
 const getmessages = async (req, res) => {
@@ -42,7 +44,7 @@ const getmessages = async (req, res) => {
         const messages = await addMessage(
             userId,
             currentChatId,
-            assistantMessage
+            assistantMessage,
         );
 
         return res.json({
@@ -106,4 +108,47 @@ const getChatMessages = async (req, res) => {
     }
 };
 
-export { getmessages, getHistory, createChat, getChatMessages };
+const renameChat = async (req, res) => {
+    try {
+        const { userId, chatId } = req.params;
+        const { title } = req.body;
+
+        if (!title || !String(title).trim()) {
+            return res.status(400).json({ error: "title is required" });
+        }
+
+        const chat = await renameChatInDB(userId, chatId, title);
+        return res.json({ ok: true, chat });
+    } catch (error) {
+        console.error("RENAME CHAT ERROR", error);
+        if (error.message && error.message.includes("Chat not found")) {
+            return res.status(404).json({ error: error.message });
+        }
+
+        return res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+const deleteChat = async (req, res) => {
+    try {
+        const { userId, chatId } = req.params;
+        await deleteChatInDB(userId, chatId);
+        return res.json({ ok: true });
+    } catch (error) {
+        console.error("DELETE CHAT ERROR", error);
+        if (error.message && error.message.includes("User not found")) {
+            return res.status(404).json({ error: error.message });
+        }
+
+        return res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+export {
+    getmessages,
+    getHistory,
+    createChat,
+    getChatMessages,
+    renameChat,
+    deleteChat,
+};

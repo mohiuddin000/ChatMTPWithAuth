@@ -28,7 +28,7 @@ function extractFactsFromText(text = "") {
         if (
             text.length < 120 &&
             /\b(?:i am|i'm|my name is|i like|i love|i enjoy|i live in|i'm from|from|i reside in)\b/i.test(
-                text
+                text,
             )
         ) {
             facts.push(text.trim());
@@ -66,7 +66,7 @@ async function addMessage(userId, chatId, messageText) {
                     "chats.$.updatedAt": new Date(),
                 },
             },
-            { new: true, select: "chats" }
+            { new: true, select: "chats" },
         )
         .lean();
 
@@ -79,51 +79,85 @@ async function addMessage(userId, chatId, messageText) {
     }
 
     const chat = updated?.chats?.find((c) => c.id === chatId);
+
+    // Auto-name the chat from the first user message, so users don't
+    // have to look at a list of undifferentiated "New Chat" entries.
+    if (
+        chat &&
+        messageText.role === "user" &&
+        chat.messages.length === 1 &&
+        (!chat.title || chat.title === "New Chat")
+    ) {
+        const autoTitle = generateChatTitle(messageText.text);
+        await userModel.updateOne(
+            { _id: userId, "chats.id": chatId },
+            { $set: { "chats.$.title": autoTitle } },
+        );
+        if (chat) chat.title = autoTitle;
+    }
+
     return chat ? chat.messages : [];
 }
 
-async function updateMemory(userId, newFacts = []) {
-    if (!userId || !Array.isArray(newFacts) || newFacts.length === 0) {
-        return;
+// Turns the first user message into a short chat title, e.g.
+// "What's the best way to learn Rust in 2026?" -> "What's the best way to learn Rust in…"
+function generateChatTitle(text) {
+    const clean = String(text || "")
+        .replace(/\s+/g, " ")
+        .trim();
+    const MAX_LEN = 42;
+    if (clean.length <= MAX_LEN) return clean || "New Chat";
+    return clean.slice(0, MAX_LEN).trim() + "…";
+}
+
+async function renameChat(userId, chatId, title) {
+    const clean = String(title || "").trim();
+    if (!userId || !chatId || !clean) {
+        throw new Error("Invalid parameters provided to renameChat");
     }
 
-    const user = await userModel.findById(userId).select("memory").lean();
-
-    if (!user) {
-        return;
-    }
-
-    const existing =
-        user.memory && Array.isArray(user.memory.facts)
-            ? user.memory.facts
-            : [];
-
-    const lower = new Set(existing.map((f) => (f || "").toLowerCase()));
-
-    const merged = [...existing];
-
-    for (const fact of newFacts) {
-        if (!lower.has((fact || "").toLowerCase())) {
-            merged.push(fact);
-            lower.add((fact || "").toLowerCase());
-        }
-    }
-
-    const capped = merged.slice(-50);
-    const newSummary =
-        user.memory && user.memory.summary
-            ? user.memory.summary
-            : capped[0] || "";
-
-    await userModel
-        .findByIdAndUpdate(userId, {
-            $set: {
-                "memory.facts": capped,
-                "memory.summary": newSummary,
-                "memory.updatedAt": new Date(),
+    const updated = await userModel
+        .findOneAndUpdate(
+            { _id: userId, "chats.id": chatId },
+            {
+                $set: {
+                    "chats.$.title": clean.slice(0, 80),
+                    "chats.$.updatedAt": new Date(),
+                },
             },
-        })
-        .exec();
+            { new: true, select: "chats" },
+        )
+        .lean();
+
+    if (!updated) {
+        throw new Error("Chat not found");
+    }
+
+    const chat = updated.chats.find((c) => c.id === chatId);
+    if (!chat) {
+        throw new Error("Chat not found");
+    }
+    return chat;
+}
+
+async function deleteChat(userId, chatId) {
+    if (!userId || !chatId) {
+        throw new Error("Invalid parameters provided to deleteChat");
+    }
+
+    const updated = await userModel
+        .findByIdAndUpdate(
+            userId,
+            { $pull: { chats: { id: chatId } } },
+            { new: true, select: "chats" },
+        )
+        .lean();
+
+    if (!updated) {
+        throw new Error("User not found");
+    }
+
+    return true;
 }
 
 async function getChatsAndMemory(userId) {
@@ -176,7 +210,7 @@ async function createNewChat(userId, title = "New Chat") {
     const updated = await userModel.findByIdAndUpdate(
         userId,
         { $push: { chats: newChat } },
-        { new: true, select: "chats" }
+        { new: true, select: "chats" },
     );
 
     if (!updated) {
@@ -193,4 +227,6 @@ export {
     updateMemory,
     extractFactsFromText,
     createNewChat,
+    renameChat,
+    deleteChat,
 };
