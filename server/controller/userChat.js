@@ -160,6 +160,50 @@ async function deleteChat(userId, chatId) {
     return true;
 }
 
+async function updateMemory(userId, newFacts = []) {
+    if (!userId || !Array.isArray(newFacts) || newFacts.length === 0) {
+        return;
+    }
+
+    const user = await userModel.findById(userId).select("memory").lean();
+
+    if (!user) {
+        return;
+    }
+
+    const existing =
+        user.memory && Array.isArray(user.memory.facts)
+            ? user.memory.facts
+            : [];
+
+    const lower = new Set(existing.map((f) => (f || "").toLowerCase()));
+
+    const merged = [...existing];
+
+    for (const fact of newFacts) {
+        if (!lower.has((fact || "").toLowerCase())) {
+            merged.push(fact);
+            lower.add((fact || "").toLowerCase());
+        }
+    }
+
+    const capped = merged.slice(-50);
+    const newSummary =
+        user.memory && user.memory.summary
+            ? user.memory.summary
+            : capped[0] || "";
+
+    await userModel
+        .findByIdAndUpdate(userId, {
+            $set: {
+                "memory.facts": capped,
+                "memory.summary": newSummary,
+                "memory.updatedAt": new Date(),
+            },
+        })
+        .exec();
+}
+
 async function getChatsAndMemory(userId) {
     if (!userId) {
         throw new Error("Invalid userId provided to getChatsAndMemory");
