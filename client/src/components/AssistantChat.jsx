@@ -2,7 +2,11 @@ import axios from "axios";
 import { useState, useRef, useEffect, useContext } from "react";
 import { AppContent } from "../context/AppContext";
 
-export default function AssistantChat({ currentChatId }) {
+export default function AssistantChat({
+    currentChatId,
+    onMessageSent,
+    onChatCreated,
+}) {
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState([]); // { role: "user" | "assistant", text: string }
     const [loading, setLoading] = useState(false);
@@ -57,7 +61,7 @@ export default function AssistantChat({ currentChatId }) {
                     chatId: currentChatId,
                 },
             );
-            return response.data.response;
+            return response.data;
         } catch (err) {
             console.error("Error calling server:", err);
             throw new Error("Server error");
@@ -73,11 +77,23 @@ export default function AssistantChat({ currentChatId }) {
         setLoading(true);
 
         try {
-            const assistantMessage = await callServer(question);
+            const data = await callServer(question);
+
+            // If this message created a brand-new chat (no currentChatId
+            // was set beforehand), let the parent know so subsequent
+            // messages continue the same chat instead of creating more.
+            if (!currentChatId && data.chatId && onChatCreated) {
+                onChatCreated(data.chatId);
+            }
+
             setMessages((prev) => [
                 ...prev,
-                { role: "assistant", text: assistantMessage },
+                { role: "assistant", text: data.response },
             ]);
+
+            // Tell the sidebar to re-fetch — picks up the auto-generated
+            // title on a new chat, plus updated message count/order.
+            onMessageSent && onMessageSent();
         } catch (err) {
             setMessages((prev) => [
                 ...prev,

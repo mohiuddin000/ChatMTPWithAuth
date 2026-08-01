@@ -10,6 +10,10 @@ function ChatPage() {
     const navigate = useNavigate();
     const [currentChatId, setCurrentChatId] = useState(null);
 
+    // Bumped every time a message is sent, so the sidebar knows to
+    // re-fetch chat titles/order (e.g. after auto-naming a new chat).
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
     useEffect(() => {
         // Only redirect once we KNOW for sure the user is logged out.
         if (isLoggedin === false) {
@@ -40,9 +44,14 @@ function ChatPage() {
                 <HistorySidebar
                     onChatSelect={handleChatSelect}
                     currentChatId={currentChatId}
+                    refreshTrigger={refreshTrigger}
                 />
                 <div className="flex-1 min-w-0">
-                    <AssistantChat currentChatId={currentChatId} />
+                    <AssistantChat
+                        currentChatId={currentChatId}
+                        onMessageSent={() => setRefreshTrigger((v) => v + 1)}
+                        onChatCreated={(chatId) => setCurrentChatId(chatId)}
+                    />
                 </div>
             </div>
         </>

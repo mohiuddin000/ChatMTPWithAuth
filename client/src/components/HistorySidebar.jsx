@@ -3,7 +3,11 @@ import axios from "axios";
 import { AppContent } from "../context/AppContext";
 import { toast } from "react-toastify";
 
-export default function HistorySidebar({ onChatSelect, currentChatId }) {
+export default function HistorySidebar({
+    onChatSelect,
+    currentChatId,
+    refreshTrigger,
+}) {
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState(null);
@@ -14,7 +18,7 @@ export default function HistorySidebar({ onChatSelect, currentChatId }) {
 
     useEffect(() => {
         fetchHistory();
-    }, [userData]);
+    }, [userData, refreshTrigger]);
 
     useEffect(() => {
         if (editingId && editInputRef.current) {
