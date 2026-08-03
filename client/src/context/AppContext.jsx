@@ -16,6 +16,26 @@ export const AppContextProvider = (props) => {
     const [isLoggedin, setIsLoggedIn] = useState(null);
     const [userData, setUserData] = useState(false);
 
+    // Theme: "light" | "dark". Defaults to saved preference, falling back
+    // to the OS/browser preference on first visit.
+    const getInitialTheme = () => {
+        const saved = localStorage.getItem("theme");
+        if (saved === "light" || saved === "dark") return saved;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+    };
+    const [theme, setTheme] = useState(getInitialTheme);
+
+    useEffect(() => {
+        document.documentElement.classList.toggle("dark", theme === "dark");
+        localStorage.setItem("theme", theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    };
+
     const getAuthStatus = async () => {
         try {
             const { data } = await axios.get(backendUrl + "/api/auth/is-auth");
@@ -56,6 +76,8 @@ export const AppContextProvider = (props) => {
         userData,
         setUserData,
         getUserData,
+        theme,
+        toggleTheme,
     };
 
     return (

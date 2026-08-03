@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AppContent } from "../context/AppContext";
 import axios from "axios";
 import { toast } from "react-toastify";
+import ThemeToggle from "../components/ThemeToggle";
 
 const Login = () => {
     const { backendUrl, setIsLoggedIn, getUserData } = useContext(AppContent);
@@ -63,6 +64,7 @@ const Login = () => {
             >
                 ChatMTP
             </button>
+            <ThemeToggle className="fixed right-5 sm:right-8 top-5" />
 
             <div className="w-full max-w-sm">
                 {/* Pill toggle */}

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AppContent } from "../context/AppContext";
 import { toast } from "react-toastify";
+import ThemeToggle from "../components/ThemeToggle";
 
 const ResetPassword = () => {
     const { backendUrl } = useContext(AppContent);
@@ -114,7 +115,7 @@ const ResetPassword = () => {
             >
                 ChatMTP
             </button>
-
+            <ThemeToggle className="fixed right-5 sm:right-8 top-5" />
             {!isEmailSent && (
                 <form onSubmit={onSubmitEmail} className="w-full max-w-sm">
                     <h1 className="font-display text-2xl font-semibold text-text mb-1">

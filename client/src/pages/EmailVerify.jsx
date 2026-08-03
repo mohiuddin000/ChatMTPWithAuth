@@ -3,6 +3,7 @@ import { AppContent } from "../context/AppContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import ThemeToggle from "../components/ThemeToggle";
 
 const EmailVerify = () => {
     axios.defaults.withCredentials = true;
@@ -90,6 +91,7 @@ const EmailVerify = () => {
             >
                 ChatMTP
             </button>
+            <ThemeToggle className="fixed right-5 sm:right-8 top-5" />
 
             <form onSubmit={onSubmitHandler} className="w-full max-w-sm">
                 <h1 className="font-display text-2xl font-semibold text-text mb-1">

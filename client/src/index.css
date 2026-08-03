@@ -47,3 +47,17 @@ body {
         transition-duration: 0.01ms !important;
     }
 }
+
+.dark {
+    --color-bg: #131211;
+    --color-surface: #1c1b18;
+    --color-surface-hover: #26241f;
+    --color-border: #34322c;
+    --color-text: #f3f2ee;
+    --color-text-muted: #a6a196;
+    --color-accent: #8a80ff;
+    --color-accent-hover: #a49bff;
+    --color-accent-soft: #211f3a;
+    --color-error: #ff7a6e;
+    --color-success: #4fd18a;
+}
